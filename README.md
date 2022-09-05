@@ -1,5 +1,4 @@
-# Teste-mobile
- Trabalho de REDES
+# Trabalho de REDES
 
 <h1>Jogo da memória - computação UFPel</h1>
 

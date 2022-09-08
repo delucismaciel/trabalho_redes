@@ -11,3 +11,36 @@ Entrar na sala [ ] <br>
 Definir protocolo [ ] <br>
 Programar o GameLogic (interpretação do protocolo) [ ] <br>
 
+<h1>Organização de Pastas</h1>
+<b>Assets/GameSets</b>: Pasta raiz dos arquivos do projeto
+<b>Assets/GameSets/Scripts</b>: Todos os códigos estão nesta pasta
+<b>Assets/GameSets/Songs</b>: Todos os Sons estão nesta pasta
+<b>Assets/GameSets/Texturas</b>: Todas as imagens estão nesta pasta
+
+<h1>Organização de código</h1>
+<b>Assets/GameSets/Scripts/Card</b>: Guarda as informações referentes a cada card
+<b>Assets/GameSets/Scripts/CardManager</b>: Gerencia cada card individualmente
+<b>Assets/GameSets/Scripts/CardController</b>: Gerencia todos os cards existentes na cena
+<b>Assets/GameSets/Scripts/SongManager</b>: Gerencia os sons da cena
+<b>Assets/GameSets/Scripts/Socket/User</b>: Gerencia o socket do user, contendo suas informações e gerenciando os métodos de comunicação por socket
+<b>Assets/GameSets/Scripts/Socket/Lobby</b>: Gerencia a interface (UI) do Lobby, fazendo requisições de ação para o user
+<b>Assets/GameSets/Scripts/Socket/Enemy</b>: Inutilizada (Idealmente controlaria o adversário, mas não será necessário)
+
+<h1>Métodos</h1>
+<b>User</b>
+<ul>
+  <li>
+  GameLogic:<br>
+  Controla a lógica do jogo com base nas mensagens recebidas pelo socket (Um grande SwitchCase)
+  </li>
+  <li>
+  ServerSocket:<br>
+  Cria o socket no modelo Host, e aguarda a existencia de um adversário para começar o jogo
+  </li>
+  <li>
+  MessageDecrypt/Encrypt:
+  Reponsável por deixar a mensagem do tipo String em algo legível pelo socket (E vice-versa)
+  </li>
+</ul>
+
+

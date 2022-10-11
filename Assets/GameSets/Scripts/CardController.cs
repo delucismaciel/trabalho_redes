@@ -7,6 +7,8 @@ public class CardController : MonoBehaviour
 {
     Card card;
 
+    public int index;
+
     [SerializeField]
     Image frente, costa;
 
@@ -33,6 +35,14 @@ public class CardController : MonoBehaviour
 
     public void onClick()
     {
+        GetComponent<Button>().interactable = false;
+
+        if (User.user.isMyTurn)
+        {
+            //Avisa o adversário que deve girar esta carta
+            User.user.SendSocket("card:" + index);
+        }
+
         //Se este é o primeiro card que o user clicou
         if (CardsManager.cardManager.firstClick == null)
         {
@@ -42,12 +52,12 @@ public class CardController : MonoBehaviour
             //Executa animation
             animController.SetBool("show", true);
 
-            //Avisa o adversário que deve girar esta carta
-            //AQUI
         }
         else
         {
             animController.SetBool("show", true);
+            GetComponent<Button>().interactable = true;
+            CardsManager.cardManager.firstClick.GetComponent<Button>().interactable = true;
 
             //Se o primeiro card clicado é diferente do card atual, errou
             if (CardsManager.cardManager.firstClick.Card != this.Card)
@@ -67,9 +77,21 @@ public class CardController : MonoBehaviour
         yield return new WaitForSeconds(1);
         SongManager.songManager.PlayGood();
         CardsManager.cardManager.firstClick = null;
+        CardsManager.cardManager.hidedCards -= 2;
 
+        if (User.user.isMyTurn)
+        {
+            User.user.WinPlay();
+            User.user.points++;
+        }
 
-        //Avisa que acertou
+        if(CardsManager.cardManager.hidedCards == 0)
+        {
+            User.user.EndGame();
+            Debug.Log("ENDGAME");
+        }
+
+        Debug.Log("Restantes: " + CardsManager.cardManager.hidedCards);
     }
 
     IEnumerator Error()
@@ -84,7 +106,12 @@ public class CardController : MonoBehaviour
         //Executam som de erro
         SongManager.songManager.PlayBad();
 
-        User.user.isMyTurn = false;
+        if (CardsManager.cardManager.hidedCards == 0)
+        {
+            User.user.EndGame();
+            Debug.Log("ENDGAME");
+        }
+
         User.user.LosePlay();
     }
 }

@@ -13,23 +13,30 @@ using TMPro;
 using System.Text;
 using System.Threading.Tasks;
 
+public enum UserType
+{
+    host, guest
+}
+
 public class User : MonoBehaviour
 {
     public static User user;
 
     public int points = 0;
 
-    public string userName;
+    public string userName, vsName;
 
     public bool isConnected = false;
     public bool isMyTurn = false;
 
-    public string ip;
+    public string ip,vsIp;
     public int port = 4848;
 
     TcpListener server;
     Socket socket;
     Socket handler;
+
+    public UserType type;
 
     private void Awake()
     {
@@ -76,16 +83,25 @@ public class User : MonoBehaviour
         {
             if (ip.AddressFamily == AddressFamily.InterNetwork)
             {
-                Lobby.lobby.myIp.text = ip.ToString()+":"+port;
+                Lobby.lobby.myIp.text = ip.ToString();
                 return ip.ToString();
             }
         }
         throw new System.Exception("No network adapters with an IPv4 address in the system!");
     }
-    
+  
     public void CreateRoom()
     {
-        Debug.Log("Começando Task socket");
+        Debug.Log("Criando Sala");
+        type = UserType.host;
+        isMyTurn = true;
+        ServerSocket();
+    }
+    public void ConnectToRoom()
+    {
+        Debug.Log("Conectando à Sala");
+        type = UserType.guest;
+        isMyTurn = false;
         ServerSocket();
     }
 
@@ -93,15 +109,27 @@ public class User : MonoBehaviour
     {
         Debug.Log("Criando Socket\n");
 
-        IPEndPoint ipEndPoint = new(IPAddress.Any, port);
-        socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        socket.Bind(ipEndPoint);
-        socket.Listen(10);
-
-        Debug.Log("Aguardando cliente\n");
-        handler = await socket.AcceptAsync();
-
-        SceneManager.LoadScene(1);
+        IPEndPoint ipEndPoint;
+        if (type == UserType.host)
+        {
+            ipEndPoint = new(IPAddress.Parse(ip), port);
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(ipEndPoint);
+            socket.Listen(10);
+            Debug.Log("Aguardando cliente\n");
+            handler = await socket.AcceptAsync();
+            SceneManager.LoadScene(1);
+        }
+        else
+        {
+            //Conecta ao server
+            Debug.Log("Conectando a " + vsIp);
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(vsIp, port);
+            handler = socket;
+            Debug.Log("Conectado a " + vsIp);
+            SceneManager.LoadScene(1);
+        }
         
         Debug.Log(handler.RemoteEndPoint.ToString());
         isConnected = true;
@@ -120,7 +148,6 @@ public class User : MonoBehaviour
 
             if (response.Contains("close"))
             {
-                handler.Send(MessageEncrypt("closing"));
                 handler.Close();
                 isConnected = false;
                 break;
@@ -128,11 +155,11 @@ public class User : MonoBehaviour
 
             if (GameLogic(response))
             {
-                handler.Send(MessageEncrypt("Ok"));
+                //Ok
             }
             else
             {
-                handler.Send(MessageEncrypt("No"));
+                //Não entendi a mensagem
             }
             
         }
@@ -176,75 +203,107 @@ public class User : MonoBehaviour
         return bytes;
     }
 
+
     bool GameLogic(string data)
     {
         Debug.Log(data);
 
         //Info Section
-        /// Exemplo de mensagem aguardada: info:MyIp=123.456.789.012|MyName=Meu Nome
+        /// Exemplo de mensagem aguardada: MyIp=123.456.789.012
         bool isOk = false;
-        if (data.Contains("info:")) {
-            //Divide as mensagens por pipes |
-            string[] infos = data.Split("|");
-            //Para cada mensagem separada por pipe
-            foreach (string info in infos)
-            {
-                if (info.Contains("MyIp="))
-                {
-                    Enemy.enemy.ip = info.Split("MyIp=")[1];
-                    Debug.Log("EnemyIp: " + Enemy.enemy.ip);
-                    isOk = true;
-                }
 
-                if (info.Contains("MyName="))
-                {
-                    Enemy.enemy.name = info.Split("MyName=")[1];
-                    Debug.Log("EnemyName: " + Enemy.enemy.name);
-                    isOk = true;
-                }
-
-                if (info.Contains("Card="))
-                {
-                    //Show card
-                    isOk = true;
-                }
-
-                if (info.Contains("Play="))
-                {
-                    if (info.Split("MyName=")[1] == "win")
-                    {
-                        isOk = true;
-                    }
-                }
-                if (info.Contains("Turn"))
-                {
-                    isMyTurn = true;
-                    isOk = true;
-                }
-
-            }
-
-        }
-
-        //Create
-        if (data.Contains("Start:"))
+        //Apresentação
+        if (data.Contains("name:"))
         {
+            SendName();
+            vsName = data.Split(":")[1];
             isMyTurn = true;
             CardsManager.cardManager.Unblock();
             isOk = true;
+            CardsManager.cardManager.vsName.text = vsName;
         }
+        
+        //apresentação pt2
+        if (data.Contains("hostName:"))
+        {
+            vsName = data.Split(":")[1];
+            CardsManager.cardManager.vsName.text = vsName;
+            isMyTurn = false;
+            CardsManager.cardManager.Block();
+            isOk = true;
+        }
+
+        if (data.Contains("card:"))
+        {
+            int cardShow = int.Parse(data.Split(":")[1]);
+            CardsManager.cardManager.cards[cardShow].onClick();
+            isOk = true;
+        }
+
+        if (data.Contains("sync:"))
+        {
+            string order = data.Split(":")[1];
+            string []oSplited = order.Split(",");
+            int[] vec = new int[oSplited.Length];
+            Debug.Log("Recebeu " + oSplited.Length + " Indexes");
+            for(int i=0;i< oSplited.Length; i++)
+            {
+                vec[i] = int.Parse(oSplited[i]);
+            }
+            CardsManager.cardManager.Order(vec);
+            isOk = true;
+        }
+
+
         return isOk;
+    }
+
+    public void SendSocket(string message)
+    {
+        handler.Send(MessageEncrypt(message));
+    }
+
+    public void SendName()
+    {
+        handler.Send(MessageEncrypt("hostName:"+userName));
     }
 
     public void WinPlay()
     {
-        handler.Send(MessageEncrypt("info:Play=win"));
+        if(isMyTurn)
+            handler.Send(MessageEncrypt("win"));
     }
 
     public void LosePlay()
     {
-        handler.Send(MessageEncrypt("info:Turn"));
+        if (isMyTurn)
+        {
+            handler.Send(MessageEncrypt("lose"));
+
+            isMyTurn = false;
+            CardsManager.cardManager.Block();
+        }
+        else
+        {
+            isMyTurn = true;
+            CardsManager.cardManager.Unblock();
+        }
     }
 
+    public void EndGame()
+    {
+        CloseRoom();
+        CardsManager.cardManager.endGamePanel.SetActive(true);
+
+        if (points > 4)
+        {
+            CardsManager.cardManager.winImage.SetActive(true);
+        }
+        if (points <= 4)
+        {
+            CardsManager.cardManager.loseImage.SetActive(true);
+        }
+
+    }
 
 }

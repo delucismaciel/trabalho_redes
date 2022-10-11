@@ -16,10 +16,13 @@ public class Lobby : MonoBehaviour
     public TextMeshProUGUI myIp, pcCode;
 
     [SerializeField]
-    Button btnCreate, btnEnter, pcCreate,pcClose;
+    Button btnCreate, btnEnter, pcCreate,pcClose, peEnter;
 
     [SerializeField]
     GameObject painelEnter, painelCreate, pcWaiting;
+
+    [SerializeField]
+    TMP_InputField vsIp;
 
     private void Awake()
     {
@@ -65,8 +68,9 @@ public class Lobby : MonoBehaviour
         pcCreate.interactable = false;
         pcClose.interactable = true;
         pcWaiting.SetActive(true);
-        pcCode.text = User.user.ip +":"+ User.user.port;
-
+        pcCode.text = User.user.ip;
+        
+        User.user.type = UserType.host;
     }
 
     public void CloseRoom()
@@ -78,6 +82,19 @@ public class Lobby : MonoBehaviour
         pcClose.interactable = false;
         pcWaiting.SetActive(false);
         pcCode.text = "";
+
+    }
+    #endregion
+
+    #region PEnter
+    InputField enterIp;
+
+    public void BtnConncet()
+    {
+        peEnter.interactable = false;
+        User.user.vsIp = vsIp.text;
+        User.user.type = UserType.guest;
+        User.user.ConnectToRoom();
     }
     #endregion
 }

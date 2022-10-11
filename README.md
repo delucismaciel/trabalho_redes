@@ -7,9 +7,9 @@ Socket abrindo [OK]<br>
 Comunicação por ip local [OK]<br>
 Criar Sala [OK]<br>
 Mostrar ip local [OK] <br>
-Entrar na sala [ ] <br>
-Definir protocolo [ ] <br>
-Programar o GameLogic (interpretação do protocolo) [ ] <br>
+Entrar na sala [OK] <br>
+Definir protocolo [OK] <br>
+Programar o GameLogic (interpretação do protocolo) [] <br>
 
 <h1>Organização de Pastas</h1>
 <b>Assets/GameSets</b>: Pasta raiz dos arquivos do projeto<br>
@@ -19,8 +19,8 @@ Programar o GameLogic (interpretação do protocolo) [ ] <br>
 
 <h1>Organização de código</h1>
 <b>Assets/GameSets/Scripts/Card</b>: Guarda as informações referentes a cada card<br>
-<b>Assets/GameSets/Scripts/CardManager</b>: Gerencia cada card individualmente<br>
-<b>Assets/GameSets/Scripts/CardController</b>: Gerencia todos os cards existentes na cena<br>
+<b>Assets/GameSets/Scripts/CardController</b>: Gerencia cada card individualmente<br>
+<b>Assets/GameSets/Scripts/CardManager</b>: Gerencia todos os cards existentes na cena<br>
 <b>Assets/GameSets/Scripts/SongManager</b>: Gerencia os sons da cena<br>
 <b>Assets/GameSets/Scripts/Socket/User</b>: Gerencia o socket do user, contendo suas informações e gerenciando os métodos de comunicação por socket<br>
 <b>Assets/GameSets/Scripts/Socket/Lobby</b>: Gerencia a interface (UI) do Lobby, fazendo requisições de ação para o user<br>
